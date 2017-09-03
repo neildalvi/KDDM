@@ -1,0 +1,135 @@
+---
+title: "R Notebook For IRIS"
+output: html_notebook
+---
+
+```{r}
+#Data
+data("iris")
+str(iris)
+```
+
+```{r}
+summary(iris)
+```
+
+```{r}
+#Partition Data
+set.seed(111)
+ind <- sample(2, nrow(iris), replace = TRUE, prob = c(0.8, 0.2))
+training <- iris[ind==1,]
+testing <- iris[ind==2,]
+```
+
+```{r}
+# Scatter Plot & Correlations
+
+# In case, psych package is missing, packages > install > psych
+library(psych)
+pairs.panels(training[,-5],
+             gap = 0,
+             bg = c("red", "yellow", "blue")[training$Species],
+             pch = 21)
+```
+
+```{r}
+# Principal Component Analysis
+pc <- prcomp(training[,-5],
+             center = TRUE,
+             scale. = TRUE)
+attributes(pc)
+```
+
+```{r}
+pc$center
+```
+
+```{r}
+mean(training$Sepal.Length)
+```
+```{r}
+pc$scale
+```
+
+```{r}
+sd(training$Sepal.Length)
+```
+
+```{r}
+print(pc)
+```
+Each principal component is normalized linear combination of original variables.
+
+```{r}
+summary(pc)
+```
+PC1 captures 73% of variation.
+
+```{r}
+#Orthogonality of PCs
+pairs.panels(pc$x,
+             gap=0,
+             bg = c("red", "yellow", "blue")[training$Species],
+             pch = 21)
+```
+
+```{r}
+#Bi-Plot
+library(devtools)
+#if ggbiplot is missing run this once.
+#install_github("ggbiplot", "vqv")
+library(ggbiplot)
+```
+```{r}
+g <- ggbiplot(pc,
+              obs.scale = 1,
+              var.scale = 1,
+              groups = training$Species,
+              ellipse = TRUE,
+              circle = TRUE,
+              ellipse.prob = 0.68)
+g <- g + scale_color_discrete(name='')
+g <- g + theme(legend.direction = 'horizontal',
+               legend.position = 'top')
+print(g)
+```
+```{r}
+#Prediction with PCs
+trg <- predict(pc, training)
+trg <- data.frame(trg, training[5])
+tst <- predict(pc, testing)
+tst <- data.frame(tst, testing[5])
+```
+
+```{r}
+# Multinomial Logistic regression with Firsth two PCs
+library(nnet)
+trg$Species <- relevel(trg$Species, ref = "setosa")
+mymodel <- multinom(Species~PC1+PC2, data = trg)
+summary(mymodel)
+```
+
+```{r}
+# Confusion Matrix & Misclassification Error - training
+p <- predict(mymodel, trg)
+tab <- table(p, trg$Species)
+tab
+```
+During Classification, made mistook 5 labels to category 3 instead of 2.
+
+```{r}
+# Calculating miss classification error - training
+1 - sum(diag(tab))/sum(tab)
+```
+
+```{r}
+p1 <- predict(mymodel, tst)
+tab1 <- table(p1, tst$Species)
+1 - sum(diag(tab1))/sum(tab1)
+```
+
+```{r}
+# What if we choose 3 principle components
+mymodel <- multinom(Species~PC1+PC2+PC3, data = trg)
+```
+No convergence achieved after 100 iterations.
