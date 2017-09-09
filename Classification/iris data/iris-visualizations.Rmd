@@ -1,0 +1,76 @@
+---
+title: "R Notebook For IRIS data visualization"
+output: html_notebook
+---
+
+1D Histograms
+
+```{r}
+#Data
+data("iris")
+hist(iris$Petal.Width, breaks = 10)
+```
+
+```{r}
+hist(iris$Petal.Width, breaks = 20)
+```
+
+
+2D Histograms
+
+```{r}
+##### OPTION 1: hexbin from package 'hexbin' #######
+library(hexbin)
+# Create hexbin object and plot
+h <- hexbin(x = iris$Petal.Width, y = iris$Petal.Length)
+plot(h)
+my.colors <- function (n) {
+  rev(heat.colors(n))
+}
+
+plot(h, colramp=my.colors)
+```
+
+
+Box Plots
+
+```{r}
+boxplot(iris)
+```
+
+
+Scatter Plots
+
+```{r}
+pairs(~iris$Sepal.Length+iris$Sepal.Width+iris$Petal.Length+iris$Petal.Width,data=iris)
+```
+
+
+Matrix Plots
+
+```{r}
+#matrixplot(~iris$Sepal.Length+iris$Sepal.Width+iris$Petal.Length+iris$Petal.Width,data=iris)
+library(plotly)
+plot_ly(type = 'parcoords',
+          line = list(color = iris$Species,
+                      colorscale = list(c(0,'red'),c(0.5,'green'),c(1,'blue'))), dimensions = list(
+            list(range = c(2,4.5),
+                 label = 'Sepal Width', values = iris$sepal_width),
+            list(range = c(4,8),
+                 constraintrange = c(5,6),
+                 label = 'Sepal Length', values = iris$sepal_length),
+            list(range = c(0,2.5),
+                 label = 'Petal Width', values = iris$petal_width),
+            list(range = c(1,7),
+                 label = 'Petal Length', values = iris$petal_length)
+            ))
+```
+
+
+Star Plots
+
+
+```{r}
+stars(data = iris)
+```
+
